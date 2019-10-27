@@ -1,14 +1,16 @@
-import psycopg2
-import config
-import json
+
+
 import sys
-from collections import OrderedDict
-from flask import jsonify
-
-
 sys.path.append('../')
 
 
+from imports import *
+
+
+def computeMD5hash(my_string):
+    m = hashlib.md5()
+    m.update(my_string.encode('utf-8'))
+    return m.hexdigest()
 
 
 class inserts():
@@ -20,7 +22,7 @@ class inserts():
         result = cur.execute("""
             insert into tb_usuarios(nome_usuario, data_nasc, senha, email)
             values('%s','%s','%s','%s')
-        """%(dados["nome_usuario"], dados["data_nasc"], dados["senha"], dados["email"]))
+        """%(dados["nome_usuario"], dados["data_nasc"], computeMD5hash(dados["senha"]), dados["email"]))
         conn.commit()
 
         # cur.close()
@@ -270,7 +272,7 @@ class UserLogin():
         conn = config.conn
         cur = config.cur
 
-        query = cur.execute("""SELECT * FROM tb_usuarios where email = '%s' and senha='%s'"""%(login, senha))
+        query = cur.execute("""SELECT * FROM tb_usuarios where email = '%s' and senha='%s'"""%(login, computeMD5hash(senha)))
 
 
         result = json.dumps(cur.fetchall(), default=str)
